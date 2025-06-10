@@ -1,35 +1,28 @@
 package com.example.keenonqr;
 
 import android.Manifest;
-
 import android.content.Intent;
 import android.content.pm.PackageManager;
-
 import android.os.Bundle;
 import android.util.Log;
-
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import com.google.mlkit.vision.barcode.BarcodeScanner;
 
 public class MainActivity extends AppCompatActivity {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Button btnScan = findViewById(R.id.btnScan);
 
+        Button btnScan = findViewById(R.id.btnScan);
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -58,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
                 new String[]{Manifest.permission.CAMERA},
                 CAMERA_PERMISSION_REQUEST_CODE);
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode,

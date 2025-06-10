@@ -9,24 +9,23 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ImageAnalysis;
-import androidx.core.content.ContextCompat;
-
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
+import androidx.core.content.ContextCompat;
+import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -42,7 +41,6 @@ public class Scanning extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i("Scan Activity", "Switched to");
         setContentView(R.layout.activity_scanning);
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
@@ -55,7 +53,6 @@ public class Scanning extends AppCompatActivity {
 
         cameraProviderFuture.addListener(() -> {
             try {
-//                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
                 cameraProvider = cameraProviderFuture.get();
                 bindPreview(cameraProvider);
             } catch (Exception e) {
@@ -98,31 +95,15 @@ public class Scanning extends AppCompatActivity {
                         .addOnSuccessListener(new OnSuccessListener<List<Barcode>>() {
                             @Override
                             public void onSuccess(List<Barcode> barcodes) {
+                                // We assume that users scan only 1 QR code
+                                // If we want to process on type of QR and multiple codes
+                                // follow this guideline
+                                // https://developers.google.com/ml-kit/vision/barcode-scanning/android#5.-get-information-from-barcodes
+
                                 if (!barcodes.isEmpty()) {
-                                    for (Barcode barcode : barcodes) {
-                                        Rect bounds = barcode.getBoundingBox();
-                                        Point[] corners = barcode.getCornerPoints();
-
-                                        String rawValue = barcode.getRawValue();
-
-                                        int valueType = barcode.getValueType();
-                                        // See API reference for complete list of supported types
-                                        switch (valueType) {
-                                            case Barcode.TYPE_WIFI:
-                                                String ssid = barcode.getWifi().getSsid();
-                                                String password = barcode.getWifi().getPassword();
-                                                int type = barcode.getWifi().getEncryptionType();
-                                                break;
-                                            case Barcode.TYPE_URL:
-                                                String title = barcode.getUrl().getTitle();
-                                                String url = barcode.getUrl().getUrl();
-                                                break;
-                                            case Barcode.TYPE_TEXT:
-                                                String content = barcode.getRawValue().toString();
-                                                Log.i("QR Scanner", "Result: " + content);
-                                                runOnUiThread(() -> showResult(content));
-                                        }
-                                    }
+                                    Barcode barcode = barcodes.get(0);
+                                    String content = barcode.getRawValue();
+                                    runOnUiThread(() -> showResult(content));
                                 }
                                 else {
                                     isProcessing = false;
@@ -152,15 +133,20 @@ public class Scanning extends AppCompatActivity {
         cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
     }
 
+    private void parseInfo(String content) {
+        // We can implement this function with the aim to parse the essential info
+        // e.g Our application only support the QR codes generated by our service
+        // If a QR code is not supported, the dialog closed and continue scanning
+    }
+
     private void showResult(String result) {
         new AlertDialog.Builder(this)
                 .setTitle("QR Detected")
                 .setMessage(result)
                 .setCancelable(false)
                 .setPositiveButton("OK", (dialog, which) -> {
+                    dialog.dismiss();
                     this.onBackPressed();
-//                    dialog.dismiss();
-//                    isProcessing = false;
                     // scanning continues automatically
                 })
                 .show();
@@ -186,5 +172,4 @@ public class Scanning extends AppCompatActivity {
         super.onDestroy();
         closeCamera();
     }
-
 }
